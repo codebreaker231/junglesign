@@ -1,0 +1,3074 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>JungleSign — Multi-Language Sign Learning Hub</title>
+
+    <!-- MediaPipe Hands + Drawing Utils for Live Webcam Tracking -->
+    <script
+      src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"
+      crossorigin="anonymous"
+    ></script>
+
+    <style>
+      :root {
+        --jungle-void: #031109;
+        --jungle-deep: #071f13;
+        --jungle-card: #0c2e1c;
+        --jungle-elevated: #123d26;
+        --jungle-border: #1f6340;
+        --emerald-bright: #10b981;
+        --emerald-glow: #34d399;
+        --lime-electric: #84cc16;
+        --lime-neon: #a3e635;
+        --lime-laser: #bef264;
+        --mint-soft: #a7f3d0;
+        --danger: #ef4444;
+        --text-primary: #ecfdf5;
+        --text-secondary: #86efac;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        font-family:
+          "Segoe UI",
+          system-ui,
+          -apple-system,
+          sans-serif;
+      }
+
+      body {
+        background:
+          radial-gradient(
+            circle at 10% 8%,
+            rgba(163, 230, 53, 0.14),
+            transparent 36%
+          ),
+          radial-gradient(
+            circle at 90% 18%,
+            rgba(16, 185, 129, 0.16),
+            transparent 40%
+          ),
+          radial-gradient(
+            circle at 50% 95%,
+            rgba(132, 204, 22, 0.1),
+            transparent 45%
+          ),
+          var(--jungle-void);
+        color: var(--text-primary);
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+
+      /* HEADER */
+      header {
+        background: rgba(3, 17, 9, 0.92);
+        backdrop-filter: blur(12px);
+        padding: 15px 30px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 2px solid var(--jungle-border);
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        gap: 14px;
+        flex-wrap: wrap;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .brand-badge {
+        width: 44px;
+        height: 44px;
+        border-radius: 13px;
+        background: linear-gradient(
+          135deg,
+          var(--emerald-bright),
+          var(--lime-neon)
+        );
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 23px;
+        box-shadow: 0 0 22px rgba(163, 230, 53, 0.35);
+      }
+
+      .brand-title {
+        font-size: 20px;
+        font-weight: 900;
+        letter-spacing: 0.4px;
+        background: linear-gradient(135deg, #6ee7b7, #bef264);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+
+      .brand-sub {
+        font-size: 12px;
+        color: var(--text-secondary);
+        font-weight: 600;
+      }
+
+      .ui-lang-select {
+        margin-top: 4px;
+        padding: 4px 10px;
+        background: var(--jungle-card);
+        border: 1px solid var(--jungle-border);
+        border-radius: 8px;
+        color: var(--lime-neon);
+        font-size: 12px;
+        font-weight: 800;
+        outline: none;
+        cursor: pointer;
+      }
+
+      .app-back-btn {
+        display: none;
+        background: linear-gradient(
+          135deg,
+          var(--emerald-glow),
+          var(--lime-neon)
+        );
+        color: #031109;
+        border: none;
+        padding: 9px 15px;
+        border-radius: 10px;
+        font-weight: 800;
+        font-size: 13px;
+        cursor: pointer;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .user-stats {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+
+      .stat-pill {
+        background: var(--jungle-card);
+        border: 1px solid var(--jungle-border);
+        padding: 8px 15px;
+        border-radius: 999px;
+        font-weight: 800;
+        font-size: 13px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      /* CONTAINER & TABS */
+      .container {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 28px 24px 52px;
+        width: 100%;
+        flex: 1;
+      }
+
+      .nav-tabs {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 22px;
+        flex-wrap: wrap;
+      }
+
+      .tab-btn {
+        background: var(--jungle-deep);
+        border: 1px solid var(--jungle-border);
+        color: var(--text-secondary);
+        padding: 11px 20px;
+        border-radius: 12px;
+        font-weight: 800;
+        font-size: 14px;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+
+      .tab-btn:hover {
+        border-color: var(--lime-electric);
+        color: var(--text-primary);
+      }
+
+      .tab-btn.active {
+        background: linear-gradient(
+          135deg,
+          var(--emerald-glow),
+          var(--lime-neon)
+        );
+        color: #031109;
+        border-color: transparent;
+        box-shadow: 0 6px 18px rgba(163, 230, 53, 0.28);
+      }
+
+      .tab-panel {
+        display: none;
+      }
+      .tab-panel.active {
+        display: block;
+      }
+
+      .card {
+        background: var(--jungle-card);
+        border: 1px solid var(--jungle-border);
+        border-radius: 22px;
+        padding: 26px;
+        margin-bottom: 24px;
+        box-shadow: 0 14px 34px rgba(0, 0, 0, 0.38);
+      }
+
+      .card-header-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 6px;
+      }
+
+      .card-title {
+        font-size: 20px;
+        font-weight: 900;
+        color: var(--lime-neon);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .count-badge {
+        background: rgba(163, 230, 53, 0.14);
+        color: var(--lime-laser);
+        border: 1px solid var(--lime-electric);
+        padding: 3px 11px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 800;
+      }
+
+      .mode-pill {
+        background: rgba(16, 185, 129, 0.16);
+        color: var(--emerald-glow);
+        border: 1px solid rgba(52, 211, 153, 0.45);
+        padding: 3px 10px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 800;
+      }
+
+      .shortcut-hint {
+        font-size: 12px;
+        color: var(--text-secondary);
+        opacity: 0.85;
+      }
+
+      .card-desc {
+        color: var(--mint-soft);
+        font-size: 14px;
+        margin-bottom: 20px;
+        opacity: 0.92;
+      }
+
+      /* SEARCH & SELECTOR */
+      .filter-controls {
+        display: flex;
+        gap: 14px;
+        margin-bottom: 14px;
+        flex-wrap: wrap;
+      }
+
+      .search-box {
+        flex: 1;
+        min-width: 240px;
+        padding: 14px 18px;
+        background: var(--jungle-void);
+        border: 2px solid var(--jungle-border);
+        border-radius: 14px;
+        color: #fff;
+        font-size: 15px;
+        outline: none;
+      }
+
+      .search-box:focus {
+        border-color: var(--lime-neon);
+        box-shadow: 0 0 0 3px rgba(163, 230, 53, 0.18);
+      }
+
+      .sl-select {
+        padding: 14px 18px;
+        background: var(--jungle-void);
+        border: 2px solid var(--jungle-border);
+        border-radius: 14px;
+        color: var(--lime-neon);
+        font-size: 15px;
+        font-weight: 800;
+        outline: none;
+        cursor: pointer;
+        min-width: 280px;
+      }
+
+      .quick-phrases-bar {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        align-items: center;
+        margin-bottom: 20px;
+      }
+
+      .quick-chip {
+        background: var(--jungle-deep);
+        border: 1px solid var(--jungle-border);
+        color: var(--mint-soft);
+        padding: 5px 11px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.15s;
+      }
+
+      .quick-chip:hover {
+        border-color: var(--lime-neon);
+        color: var(--lime-neon);
+      }
+
+      /* SENTENCE & WHOLE-WORD ENGINE */
+      .phrase-builder {
+        background: linear-gradient(
+          160deg,
+          rgba(18, 61, 38, 0.78),
+          rgba(3, 17, 9, 0.94)
+        );
+        border: 2px solid var(--lime-electric);
+        border-radius: 18px;
+        padding: 20px;
+        margin-bottom: 24px;
+        box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
+      }
+
+      .phrase-top-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-bottom: 14px;
+      }
+
+      .phrase-heading {
+        font-size: 16px;
+        font-weight: 900;
+        color: var(--lime-laser);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .phrase-sentence-pill {
+        background: var(--jungle-card);
+        border: 1px solid var(--jungle-border);
+        color: var(--text-primary);
+        padding: 5px 12px;
+        border-radius: 999px;
+        font-size: 14px;
+        font-weight: 800;
+      }
+
+      .sentence-full-strip {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        padding: 14px;
+        background: var(--jungle-void);
+        border: 1px solid var(--jungle-border);
+        border-radius: 14px;
+        margin-bottom: 18px;
+      }
+
+      .sentence-word-card {
+        background: var(--jungle-deep);
+        border: 2px solid var(--jungle-border);
+        border-radius: 14px;
+        padding: 10px 12px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+        min-width: 118px;
+        cursor: pointer;
+        transition:
+          transform 0.15s,
+          border-color 0.15s;
+      }
+
+      .sentence-word-card:hover {
+        transform: translateY(-2px);
+        border-color: var(--lime-neon);
+      }
+
+      .sentence-word-card.is-spelled {
+        border-style: dashed;
+      }
+
+      .sentence-word-name {
+        font-size: 14px;
+        font-weight: 900;
+        color: var(--lime-neon);
+      }
+
+      .sentence-body-tag {
+        font-size: 10px;
+        font-weight: 800;
+        color: var(--emerald-glow);
+        background: rgba(16, 185, 129, 0.14);
+        border: 1px solid rgba(52, 211, 153, 0.35);
+        padding: 2px 7px;
+        border-radius: 999px;
+        text-align: center;
+      }
+
+      .words-unit-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 14px;
+      }
+
+      .word-unit-box {
+        background: var(--jungle-void);
+        border: 2px solid var(--jungle-border);
+        border-radius: 16px;
+        padding: 14px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .word-unit-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid rgba(31, 99, 64, 0.55);
+        padding-bottom: 8px;
+      }
+
+      .word-unit-label {
+        font-size: 15px;
+        font-weight: 900;
+        color: var(--lime-neon);
+      }
+
+      .body-cue-banner {
+        background: rgba(163, 230, 53, 0.1);
+        border: 1px solid rgba(163, 230, 53, 0.35);
+        border-radius: 10px;
+        padding: 8px 10px;
+        font-size: 12px;
+        color: var(--lime-laser);
+        line-height: 1.45;
+      }
+
+      .word-unit-signs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+      }
+
+      .unit-sign-tile {
+        background: var(--jungle-deep);
+        border: 1px solid var(--jungle-border);
+        border-radius: 11px;
+        padding: 6px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 3px;
+        cursor: pointer;
+      }
+
+      .unit-sign-tile .sign-art-box {
+        width: 60px;
+        height: 60px;
+        border-radius: 9px;
+      }
+
+      .unit-sign-tile .sign-art-box svg {
+        width: 50px;
+        height: 50px;
+      }
+
+      .unit-sign-char {
+        font-size: 11px;
+        font-weight: 900;
+        color: var(--mint-soft);
+      }
+
+      .section-divider-label {
+        font-size: 12px;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--text-secondary);
+        margin-bottom: 12px;
+      }
+
+      /* SIGN GRID */
+      .sign-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
+        gap: 16px;
+      }
+
+      .sign-card {
+        background: linear-gradient(
+          180deg,
+          var(--jungle-deep),
+          var(--jungle-void)
+        );
+        border: 2px solid var(--jungle-border);
+        border-radius: 16px;
+        padding: 14px 12px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .sign-card:hover {
+        border-color: var(--lime-neon);
+        transform: translateY(-4px);
+        box-shadow: 0 10px 24px rgba(16, 185, 129, 0.24);
+      }
+
+      .sign-art-box {
+        width: 98px;
+        height: 98px;
+        border-radius: 14px;
+        background: radial-gradient(circle at 30% 25%, #175435, #061c11);
+        border: 1px solid rgba(163, 230, 53, 0.35);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+      }
+
+      .sign-art-box svg {
+        width: 82px;
+        height: 82px;
+      }
+
+      .hand-badge {
+        position: absolute;
+        top: 5px;
+        right: 6px;
+        font-size: 9px;
+        font-weight: 900;
+        padding: 2px 5px;
+        border-radius: 5px;
+        background: rgba(3, 17, 9, 0.88);
+        color: var(--lime-neon);
+        border: 1px solid rgba(163, 230, 53, 0.35);
+        z-index: 2;
+      }
+
+      .type-badge {
+        position: absolute;
+        top: 5px;
+        left: 6px;
+        font-size: 9px;
+        font-weight: 900;
+        padding: 2px 5px;
+        border-radius: 5px;
+        background: rgba(16, 185, 129, 0.24);
+        color: var(--mint-soft);
+        border: 1px solid rgba(52, 211, 153, 0.4);
+        z-index: 2;
+      }
+
+      .sign-label {
+        font-size: 15px;
+        font-weight: 800;
+        color: var(--text-primary);
+      }
+
+      .sign-sub {
+        font-size: 11px;
+        color: var(--text-secondary);
+        font-weight: 600;
+        margin-top: 2px;
+      }
+
+      .empty-state {
+        grid-column: 1 / -1;
+        text-align: center;
+        padding: 36px 20px;
+        background: var(--jungle-void);
+        border: 1px dashed var(--jungle-border);
+        border-radius: 16px;
+        color: var(--text-secondary);
+      }
+
+      /* BUTTONS */
+      .btn {
+        background: linear-gradient(
+          135deg,
+          var(--emerald-glow),
+          var(--lime-neon)
+        );
+        color: #031109;
+        border: none;
+        padding: 12px 22px;
+        border-radius: 12px;
+        font-weight: 900;
+        font-size: 14px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .btn-stop {
+        background: rgba(239, 68, 68, 0.16);
+        color: #fca5a5;
+        border: 1px solid rgba(239, 68, 68, 0.55);
+        padding: 12px 18px;
+        border-radius: 12px;
+        font-weight: 800;
+        font-size: 14px;
+        cursor: pointer;
+        display: none;
+        align-items: center;
+        gap: 8px;
+      }
+
+      /* FLASHCARDS */
+      .flashcard-wrap {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 18px;
+      }
+
+      .flashcard {
+        width: 316px;
+        height: 348px;
+        background: linear-gradient(
+          160deg,
+          var(--jungle-deep),
+          var(--jungle-void)
+        );
+        border: 3px solid var(--lime-electric);
+        border-radius: 24px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+        box-shadow: 0 16px 36px rgba(0, 0, 0, 0.55);
+        padding: 20px;
+        text-align: center;
+      }
+
+      .flashcard .sign-art-box {
+        width: 172px;
+        height: 172px;
+      }
+      .flashcard .sign-art-box svg {
+        width: 144px;
+        height: 144px;
+      }
+
+      .flashcard-hint {
+        margin-top: 14px;
+        font-size: 12px;
+        color: var(--text-secondary);
+        font-weight: 700;
+      }
+
+      .flashcard-answer {
+        display: none;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .flashcard-answer-title {
+        font-size: 28px;
+        font-weight: 900;
+        color: var(--lime-neon);
+      }
+
+      .flashcard-answer-desc {
+        font-size: 13px;
+        color: var(--mint-soft);
+        line-height: 1.5;
+      }
+
+      /* QUIZ */
+      .quiz-box {
+        max-width: 620px;
+        margin: 0 auto;
+        text-align: center;
+      }
+
+      .quiz-prompt-card {
+        width: 178px;
+        height: 178px;
+        margin: 0 auto;
+        border-radius: 20px;
+        background: var(--jungle-void);
+        border: 2px solid var(--lime-electric);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .quiz-prompt-card .sign-art-box {
+        width: 146px;
+        height: 146px;
+        border: none;
+        background: transparent;
+      }
+      .quiz-prompt-card .sign-art-box svg {
+        width: 128px;
+        height: 128px;
+      }
+
+      .quiz-options {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+        margin-top: 22px;
+      }
+
+      .quiz-btn {
+        background: var(--jungle-void);
+        border: 2px solid var(--jungle-border);
+        color: var(--text-primary);
+        padding: 16px;
+        border-radius: 14px;
+        font-size: 17px;
+        font-weight: 800;
+        cursor: pointer;
+      }
+
+      .quiz-btn:hover {
+        border-color: var(--lime-neon);
+        background: rgba(163, 230, 53, 0.12);
+      }
+
+      .feedback-msg {
+        margin-top: 16px;
+        font-size: 17px;
+        font-weight: 800;
+        min-height: 26px;
+      }
+
+      /* WEBCAM */
+      .camera-controls-row {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        flex-wrap: wrap;
+        margin-bottom: 12px;
+      }
+
+      .camera-status {
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--text-secondary);
+        margin-bottom: 16px;
+        min-height: 20px;
+      }
+
+      .camera-layout {
+        display: flex;
+        gap: 24px;
+        flex-wrap: wrap;
+        align-items: flex-start;
+      }
+
+      .camera-view {
+        position: relative;
+        width: 480px;
+        max-width: 100%;
+        height: 360px;
+        background: #000;
+        border-radius: 18px;
+        overflow: hidden;
+        border: 2px solid var(--lime-electric);
+      }
+
+      #webcam {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transform: scaleX(-1);
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      #outputCanvas {
+        position: relative;
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+
+      /* CLOSE-UP MODAL */
+      .modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(3, 17, 9, 0.88);
+        backdrop-filter: blur(8px);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+        padding: 16px;
+      }
+
+      .modal-overlay.active {
+        display: flex;
+      }
+
+      .modal-card {
+        background: var(--jungle-card);
+        border: 2px solid var(--lime-neon);
+        border-radius: 22px;
+        padding: 32px;
+        width: 100%;
+        max-width: 480px;
+        text-align: center;
+        position: relative;
+        box-shadow: 0 24px 48px rgba(0, 0, 0, 0.75);
+      }
+
+      .modal-close {
+        position: absolute;
+        top: 14px;
+        right: 18px;
+        background: transparent;
+        border: none;
+        color: var(--text-secondary);
+        font-size: 26px;
+        cursor: pointer;
+      }
+
+      .modal-art .sign-art-box {
+        width: 176px;
+        height: 176px;
+        margin: 0 auto 12px;
+      }
+      .modal-art .sign-art-box svg {
+        width: 148px;
+        height: 148px;
+      }
+
+      .modal-body-box {
+        margin-top: 12px;
+        background: rgba(163, 230, 53, 0.1);
+        border: 1px solid rgba(163, 230, 53, 0.38);
+        border-radius: 12px;
+        padding: 10px 12px;
+        font-size: 13px;
+        color: var(--lime-laser);
+        font-weight: 700;
+      }
+
+      .finger-pills {
+        display: flex;
+        justify-content: center;
+        gap: 6px;
+        flex-wrap: wrap;
+        margin-top: 14px;
+      }
+
+      .finger-chip {
+        font-size: 11px;
+        font-weight: 800;
+        padding: 4px 8px;
+        border-radius: 8px;
+        background: var(--jungle-void);
+        border: 1px solid var(--jungle-border);
+        color: var(--lime-laser);
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="brand">
+        <button
+          id="handySpeakBackBtn"
+          class="app-back-btn"
+          onclick="goBackToApp()"
+        >
+          ⬅️ <span id="backBtnLabel">Back to Translate</span>
+        </button>
+        <div class="brand-badge">🌿</div>
+        <div>
+          <div class="brand-title" id="headerBrandTitle">
+            JUNGLESIGN — ASL LEARNING HUB
+          </div>
+          <div class="brand-sub">
+            <select
+              id="uiLangSelect"
+              class="ui-lang-select"
+              onchange="changeUILanguage(this.value)"
+              aria-label="Select Interface Language"
+            >
+              <option value="en">🌐 Language: English</option>
+              <option value="es">🌐 Idioma: Español</option>
+              <option value="fr">🌐 Langue: Français</option>
+              <option value="de">🌐 Sprache: Deutsch</option>
+              <option value="it">🌐 Lingua: Italiano</option>
+              <option value="pt">🌐 Idioma: Português</option>
+              <option value="ja">🌐 言語: 日本語</option>
+              <option value="ko">🌐 언어: 한국어</option>
+              <option value="zh">🌐 语言: 中文</option>
+              <option value="ar">🌐 اللغة: العربية</option>
+              <option value="hi">🌐 भाषा: हिन्दी</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="user-stats">
+        <div class="stat-pill">
+          🔥 <span id="streakLabel">Streak</span>:
+          <span id="streakCount" style="color: var(--lime-neon)">1</span
+          ><span id="daySuffix">d</span>
+        </div>
+        <div class="stat-pill">
+          ⚡ <span id="xpLabel">XP</span>:
+          <span id="xpCount" style="color: var(--emerald-glow)">100</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="container">
+      <div class="nav-tabs">
+        <button
+          class="tab-btn active"
+          id="tabBtnDict"
+          onclick="switchTab('dictionary', event)"
+        >
+          📖 Sign Dictionary
+        </button>
+        <button
+          class="tab-btn"
+          id="tabBtnFlash"
+          onclick="switchTab('flashcards', event)"
+        >
+          🎴 Flashcard Deck
+        </button>
+        <button
+          class="tab-btn"
+          id="tabBtnQuiz"
+          onclick="switchTab('quiz', event)"
+        >
+          🧠 Speed Quiz (+XP)
+        </button>
+        <button
+          class="tab-btn"
+          id="tabBtnCam"
+          onclick="switchTab('camera', event)"
+        >
+          📷 Live Hand Tracker
+        </button>
+      </div>
+
+      <!-- TAB 1: DICTIONARY & SENTENCE / WORD ENGINE -->
+      <div id="dictionary" class="tab-panel active">
+        <div class="card">
+          <div class="card-header-row">
+            <div class="card-title">
+              <span id="dictCardTitle">ASL Sign Dictionary</span>
+              <span class="count-badge" id="charCountBadge">42 signs</span>
+              <span class="mode-pill" id="handModePill"
+                >1-Hand Alphabet + Whole Words</span
+              >
+            </div>
+            <div class="shortcut-hint" id="dictShortcutHint">
+              Tip: Press / to search • Esc to close modal
+            </div>
+          </div>
+          <div class="card-desc">
+            Search whole words or sentences (like "i like you", "hello friend",
+            "thank you") to see full-word signs with body language cues +
+            breakdown!
+          </div>
+
+          <div class="filter-controls">
+            <input
+              type="text"
+              id="searchInput"
+              class="search-box"
+              placeholder="🔍 Search whole words or phrases (e.g. i like you, hello, thank you)..."
+              oninput="filterDictionary()"
+            />
+            <select
+              id="slTypeSelect"
+              class="sl-select"
+              onchange="changeSignLanguage()"
+              aria-label="Select Sign Language"
+            >
+              <option value="ASL">🇺🇸 ASL (1-Hand — 42 signs)</option>
+              <option value="BSL">🇬🇧 BSL (2-Hand — 42 signs)</option>
+              <option value="AUSLAN">🇦🇺 Auslan (2-Hand — 42 signs)</option>
+              <option value="NZSL">🇳🇿 NZSL (2-Hand — 42 signs)</option>
+              <option value="ISL">🇮🇳 ISL (Indian SL — 42 signs)</option>
+              <option value="LSF">🇫🇷 LSF (1-Hand — 42 signs)</option>
+              <option value="LSE">🇪🇸 LSE (Spanish SL — 43 signs)</option>
+              <option value="DGS">🇩🇪 DGS (German SL — 46 signs)</option>
+              <option value="JSL">🇯🇵 JSL (Japanese — 62 signs)</option>
+            </select>
+          </div>
+
+          <div class="quick-phrases-bar">
+            <span
+              style="
+                font-size: 12px;
+                font-weight: 800;
+                color: var(--text-secondary);
+              "
+              id="tryPhraseLabel"
+              >Try phrase:</span
+            >
+            <button
+              type="button"
+              class="quick-chip"
+              onclick="setQuickSearch('i like you')"
+            >
+              i like you
+            </button>
+            <button
+              type="button"
+              class="quick-chip"
+              onclick="setQuickSearch('hello friend')"
+            >
+              hello friend
+            </button>
+            <button
+              type="button"
+              class="quick-chip"
+              onclick="setQuickSearch('thank you')"
+            >
+              thank you
+            </button>
+            <button
+              type="button"
+              class="quick-chip"
+              onclick="setQuickSearch('i love learning')"
+            >
+              i love learning
+            </button>
+            <button
+              type="button"
+              class="quick-chip"
+              onclick="setQuickSearch('please help me')"
+            >
+              please help me
+            </button>
+          </div>
+
+          <!-- FULL SENTENCE + WORD-BY-WORD BODY LANGUAGE BREAKDOWN -->
+          <div
+            id="phraseEnginePanel"
+            class="phrase-builder"
+            style="display: none"
+          ></div>
+
+          <!-- SIGN CARDS GRID -->
+          <div class="section-divider-label" id="gridSectionLabel">
+            Whole-Word &amp; Alphabet Sign Cards
+          </div>
+          <div class="sign-grid" id="alphabetGrid"></div>
+        </div>
+      </div>
+
+      <!-- TAB 2: FLASHCARDS -->
+      <div id="flashcards" class="tab-panel">
+        <div class="card">
+          <div class="card-header-row">
+            <div class="card-title" id="flashcardTitle">ASL Flashcard Deck</div>
+            <div class="shortcut-hint" id="flashShortcutHint">
+              Tip: Press Space to flip card
+            </div>
+          </div>
+          <div class="card-desc">
+            Read the handshape and body cue, tap or press Space to flip, and
+            deal the next card.
+          </div>
+
+          <div class="flashcard-wrap">
+            <div class="flashcard" onclick="flipFlashcard()">
+              <div id="cardFront">
+                <div id="cardSymbol"></div>
+                <div class="flashcard-hint">Tap or press Space to reveal</div>
+              </div>
+              <div class="flashcard-answer" id="cardAnswer">
+                <div class="flashcard-answer-title" id="cardAnswerTitle">
+                  Sign "A"
+                </div>
+                <div class="flashcard-answer-desc" id="cardAnswerDesc"></div>
+              </div>
+            </div>
+            <button class="btn" id="nextCardBtn" onclick="nextFlashcard()">
+              Next Card ➔
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 3: QUIZ -->
+      <div id="quiz" class="tab-panel">
+        <div class="card">
+          <div class="card-title" id="quizTitle">ASL Speed Quiz</div>
+          <div class="card-desc">
+            Match the sign shown below to earn +10 XP.
+          </div>
+
+          <div class="quiz-box">
+            <div class="quiz-prompt-card">
+              <div id="quizTargetSymbol"></div>
+            </div>
+            <h3
+              id="quizPromptHeading"
+              style="margin-top: 16px; color: var(--mint-soft)"
+            >
+              Which sign is shown above?
+            </h3>
+            <div class="quiz-options" id="quizOptionsGrid"></div>
+            <div class="feedback-msg" id="quizFeedback"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 4: CAMERA -->
+      <div id="camera" class="tab-panel">
+        <div class="card">
+          <div class="card-title" id="camCardTitle">
+            Live Webcam Hand Landmark Tracker
+          </div>
+          <div class="card-desc" id="camCardDesc">
+            Track your hand joints in real time with glowing emerald &amp; lime
+            landmarks.
+          </div>
+
+          <div class="camera-controls-row">
+            <button class="btn" id="startCamBtn" onclick="startCamera()">
+              📷 Start Camera Tracking
+            </button>
+            <button
+              type="button"
+              class="btn-stop"
+              id="stopCamBtn"
+              onclick="stopCamera()"
+            >
+              ⏹ Stop Camera
+            </button>
+          </div>
+          <div class="camera-status" id="camStatusText"></div>
+
+          <div class="camera-layout">
+            <div class="camera-view" id="camContainer" style="display: none">
+              <video id="webcam" autoplay playsinline muted></video>
+              <canvas id="outputCanvas" width="480" height="360"></canvas>
+            </div>
+            <div style="flex: 1; min-width: 240px">
+              <h3
+                id="camTipsHeading"
+                style="color: var(--lime-neon); margin-bottom: 8px"
+              >
+                Practice Tips:
+              </h3>
+              <ul
+                id="camTipsList"
+                style="
+                  color: var(--mint-soft);
+                  margin-left: 20px;
+                  line-height: 1.85;
+                  font-size: 14px;
+                "
+              >
+                <li>
+                  Hold your hand clearly inside the frame at chest height.
+                </li>
+                <li>
+                  Use bright, even lighting so all 21 landmarks stay locked.
+                </li>
+                <li>
+                  Emerald connectors and lime dots highlight every joint live.
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CLOSE-UP MODAL -->
+    <div
+      class="modal-overlay"
+      id="detailModal"
+      onclick="if (event.target === this) closeModal();"
+    >
+      <div class="modal-card">
+        <button class="modal-close" onclick="closeModal()">✕</button>
+        <div class="modal-art" id="modalSymbol"></div>
+        <h2
+          id="modalTitle"
+          style="font-size: 24px; margin-bottom: 4px; color: var(--lime-neon)"
+        >
+          ASL Sign: A
+        </h2>
+        <div
+          id="modalMeta"
+          style="
+            font-size: 12px;
+            font-weight: 800;
+            color: var(--emerald-glow);
+            margin-bottom: 12px;
+          "
+        ></div>
+        <p
+          id="modalDesc"
+          style="color: var(--mint-soft); line-height: 1.65; font-size: 15px"
+        ></p>
+        <div
+          class="modal-body-box"
+          id="modalBodyCue"
+          style="display: none"
+        ></div>
+        <div class="finger-pills" id="modalFingerChips"></div>
+        <button
+          class="btn"
+          id="modalGotItBtn"
+          style="margin-top: 22px; width: 100%; justify-content: center"
+          onclick="closeModal()"
+        >
+          Got it!
+        </button>
+      </div>
+    </div>
+
+    <script>
+      /* 1. HANDYSPEAK APP INTEGRATION */
+      function checkAppMode() {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get("source") === "handyspeak") {
+          const backBtn = document.getElementById("handySpeakBackBtn");
+          if (backBtn) backBtn.style.display = "inline-flex";
+        }
+      }
+
+      function goBackToApp() {
+        if (window.history.length > 1) {
+          window.history.back();
+        } else {
+          window.location.href = "/translate";
+        }
+      }
+
+      /* 2. UI TRANSLATIONS */
+      const UI_TRANSLATIONS = {
+        en: {
+          pageTitle: "JungleSign — Multi-Language Sign Learning Hub",
+          backBtn: "Back to Translate",
+          streakLabel: "Streak",
+          daySuffix: "d",
+          xpLabel: "XP",
+          tabDict: "📖 Sign Dictionary",
+          tabFlash: "🎴 Flashcard Deck",
+          tabQuiz: "🧠 Speed Quiz (+XP)",
+          tabCam: "📷 Live Hand Tracker",
+          hubSuffix: "LEARNING HUB",
+          dictTitle: "Sign Dictionary",
+          flashTitle: "Flashcard Deck",
+          quizTitle: "Speed Quiz",
+          camTitle: "Live Webcam Hand Landmark Tracker",
+          camDesc:
+            "Track your hand joints in real time with glowing emerald & lime landmarks.",
+          startCamBtn: "📷 Start Camera Tracking",
+          stopCamBtn: "⏹ Stop Camera",
+          camStarting: "Starting camera & hand tracker...",
+          camActive:
+            "Live tracking active — emerald joints & lime landmarks enabled.",
+          camStopped: "Camera stopped.",
+          camError:
+            "Could not start camera. Check browser camera permissions and HTTPS/localhost.",
+          camTipsHeading: "Practice Tips:",
+          camTips: [
+            "Hold your hand clearly inside the frame at chest height.",
+            "Use bright, even lighting so all 21 landmarks stay locked.",
+            "Emerald connectors and lime dots highlight every joint live.",
+          ],
+          dictShortcut: "Tip: Press / to search • Esc to close modal",
+          flashShortcut: "Tip: Press Space to flip card",
+          signCount: (n) => `${n} ${n === 1 ? "sign" : "signs"}`,
+          oneHandBadge: "1-Hand Alphabet + Whole Words",
+          twoHandBadge: "2-Hand Alphabet + Whole Words",
+          mixedHandBadge: "Regional Handshapes + Whole Words",
+          slOptionText: (flag, code, modeShort, count) =>
+            `${flag} ${code} (${modeShort} — ${count} signs)`,
+          slModesShort: {
+            ASL: "1-Hand",
+            BSL: "2-Hand",
+            AUSLAN: "2-Hand",
+            NZSL: "2-Hand",
+            ISL: "Indian SL",
+            LSF: "1-Hand",
+            LSE: "Spanish SL",
+            DGS: "German SL",
+            JSL: "Kana Yubimoji",
+          },
+          slNames: {
+            ASL: "ASL",
+            BSL: "BSL",
+            AUSLAN: "Auslan",
+            NZSL: "NZSL",
+            ISL: "ISL",
+            LSF: "LSF",
+            LSE: "LSE",
+            DGS: "DGS",
+            JSL: "JSL",
+          },
+          searchPlaceholder:
+            "🔍 Search whole words or phrases (e.g. i like you, hello, thank you)...",
+          tryPhraseLabel: "Try phrase:",
+          gridSectionLabel: "Whole-Word & Alphabet Sign Cards",
+          fullSentenceHeading: "Full Sentence / Phrase",
+          wordBreakdownHeading:
+            "Word-by-Word Breakdown (Handshape + Body Language)",
+          wholeWordTag: "WORD",
+          spelledWordTag: "SPELLED",
+          bodyCueLabel: "Body & Facial Cue",
+          lettersCount: (n) => `${n} ${n === 1 ? "letter" : "letters"}`,
+          emptySearch: (sl) =>
+            `No direct sign card matched that query in <strong>${sl}</strong>.`,
+          dictDesc:
+            'Search whole words or sentences (like "i like you" or "hello friend") to see full-word signs with body language cues + breakdown!',
+          flashDesc:
+            "Read the handshape and body cue, tap or press Space to flip, and deal the next card.",
+          quizDesc: "Match the sign shown below to earn +10 XP.",
+          quizPrompt: "Which sign is shown above?",
+          quizCorrect: "✅ Correct! +10 XP",
+          quizWrong: "❌ Not quite — try again!",
+          nextCard: "Next Card ➔",
+          flipHint: "Tap or press Space to reveal",
+          gotIt: "Got it!",
+          signWord: "Sign",
+          fingers: {
+            Thumb: "Thumb",
+            Index: "Index",
+            Middle: "Middle",
+            Ring: "Ring",
+            Pinky: "Pinky",
+          },
+          fingerStates: {
+            Up: "Up",
+            Curved: "Curved",
+            Tucked: "Tucked",
+            Down: "Down",
+            Closed: "Closed",
+          },
+          cues: {
+            aslOneHand: "1-Hand ASL",
+            bslTwoHand: "2-Hand BSL",
+            auslanTwoHand: "2-Hand Auslan",
+            nzslTwoHand: "2-Hand NZSL",
+            islOneHand: "1-Hand ISL",
+            islTwoHand: "2-Hand ISL",
+            lsfOneHand: "1-Hand LSF",
+            lseOneHand: "1-Hand LSE",
+            dgsOneHand: "1-Hand DGS",
+            yubimoji: (romaji) => `JSL Kana • ${romaji.toUpperCase()}`,
+            wholeWord1H: "Whole-Word Sign (1H)",
+            wholeWord2H: "Whole-Word Sign (2H)",
+          },
+        },
+        es: {
+          pageTitle: "JungleSign — Centro de Lenguas de Señas",
+          backBtn: "Volver a Traducir",
+          streakLabel: "Racha",
+          daySuffix: "d",
+          xpLabel: "XP",
+          tabDict: "📖 Diccionario de Señas",
+          tabFlash: "🎴 Tarjetas de Estudio",
+          tabQuiz: "🧠 Quiz Rápido (+XP)",
+          tabCam: "📷 Rastreo de Manos",
+          hubSuffix: "CENTRO DE APRENDIZAJE",
+          dictTitle: "Diccionario de Señas",
+          flashTitle: "Tarjetas de Estudio",
+          quizTitle: "Quiz Rápido",
+          camTitle: "Rastreo de Manos en Vivo por Cámara",
+          camDesc:
+            "Observa los puntos de la mano en tiempo real con guías esmeralda y lima.",
+          startCamBtn: "📷 Iniciar Cámara",
+          stopCamBtn: "⏹ Detener Cámara",
+          camStarting: "Iniciando cámara y rastreador...",
+          camActive: "Rastreo activo — líneas esmeralda y puntos lima en vivo.",
+          camStopped: "Cámara detenida.",
+          camError:
+            "No se pudo iniciar la cámara. Revisa los permisos del navegador.",
+          camTipsHeading: "Consejos de práctica:",
+          camTips: [
+            "Mantén tu mano visible dentro del encuadre a la altura del pecho.",
+            "Usa iluminación clara y pareja para mantener los 21 puntos.",
+            "Las líneas esmeralda y los puntos lima muestran cada articulación en vivo.",
+          ],
+          dictShortcut: "Atajo: / para buscar • Esc para cerrar",
+          flashShortcut: "Atajo: Espacio para girar la tarjeta",
+          signCount: (n) => `${n} ${n === 1 ? "seña" : "señas"}`,
+          oneHandBadge: "1 Mano + Palabras Completas",
+          twoHandBadge: "2 Manos + Palabras Completas",
+          mixedHandBadge: "Señas Regionales + Palabras",
+          slOptionText: (flag, code, modeShort, count) =>
+            `${flag} ${code} (${modeShort} — ${count} señas)`,
+          slModesShort: {
+            ASL: "1 mano",
+            BSL: "2 manos",
+            AUSLAN: "2 manos",
+            NZSL: "2 manos",
+            ISL: "Señas India",
+            LSF: "1 mano",
+            LSE: "Señas España",
+            DGS: "Señas Alemania",
+            JSL: "Kana Yubimoji",
+          },
+          slNames: {
+            ASL: "ASL",
+            BSL: "BSL",
+            AUSLAN: "Auslan",
+            NZSL: "NZSL",
+            ISL: "ISL",
+            LSF: "LSF",
+            LSE: "LSE",
+            DGS: "DGS",
+            JSL: "JSL",
+          },
+          searchPlaceholder:
+            "🔍 Busca palabras o frases (ej. i like you, hello, thank you)...",
+          tryPhraseLabel: "Prueba:",
+          gridSectionLabel: "Palabras Completas y Alfabeto",
+          fullSentenceHeading: "Frase Completa",
+          wordBreakdownHeading:
+            "Desglose por Palabra (Mano + Lenguaje Corporal)",
+          wholeWordTag: "PALABRA",
+          spelledWordTag: "DELETREO",
+          bodyCueLabel: "Expresión y Cuerpo",
+          lettersCount: (n) => `${n} ${n === 1 ? "letra" : "letras"}`,
+          emptySearch: (sl) =>
+            `No hubo coincidencias directas en <strong>${sl}</strong>.`,
+          dictDesc:
+            'Busca palabras o frases completas (como "i like you") para ver señas de palabra completa con lenguaje corporal + desglose.',
+          flashDesc:
+            "Observa la forma de la mano y el gesto corporal, pulsa Espacio para girar.",
+          quizDesc: "Identifica la seña mostrada para ganar +10 XP.",
+          quizPrompt: "¿Qué seña se muestra arriba?",
+          quizCorrect: "✅ ¡Correcto! +10 XP",
+          quizWrong: "❌ Inténtalo de nuevo.",
+          nextCard: "Siguiente Tarjeta ➔",
+          flipHint: "Toca o pulsa Espacio para mostrar",
+          gotIt: "¡Entendido!",
+          signWord: "Seña",
+          fingers: {
+            Thumb: "Pulgar",
+            Index: "Índice",
+            Middle: "Medio",
+            Ring: "Anular",
+            Pinky: "Meñique",
+          },
+          fingerStates: {
+            Up: "Arriba",
+            Curved: "Curvado",
+            Tucked: "Recogido",
+            Down: "Abajo",
+            Closed: "Cerrado",
+          },
+          cues: {
+            aslOneHand: "1 mano ASL",
+            bslTwoHand: "2 manos BSL",
+            auslanTwoHand: "2 manos Auslan",
+            nzslTwoHand: "2 manos NZSL",
+            islOneHand: "1 mano ISL",
+            islTwoHand: "2 manos ISL",
+            lsfOneHand: "1 mano LSF",
+            lseOneHand: "1 mano LSE",
+            dgsOneHand: "1 mano DGS",
+            yubimoji: (romaji) => `Kana JSL • ${romaji.toUpperCase()}`,
+            wholeWord1H: "Palabra Completa (1M)",
+            wholeWord2H: "Palabra Completa (2M)",
+          },
+        },
+        fr: {
+          pageTitle: "JungleSign — Hub des Langues des Signes",
+          backBtn: "Retour à la Traduction",
+          streakLabel: "Série",
+          daySuffix: "j",
+          xpLabel: "XP",
+          tabDict: "📖 Dictionnaire des Signes",
+          tabFlash: "🎴 Cartes Mémoire",
+          tabQuiz: "🧠 Quiz Rapide (+XP)",
+          tabCam: "📷 Suivi des Mains",
+          hubSuffix: "ESPACE D'APPRENTISSAGE",
+          dictTitle: "Dictionnaire des Signes",
+          flashTitle: "Cartes Mémoire",
+          quizTitle: "Quiz Rapide",
+          camTitle: "Suivi des Mains en Direct par Caméra",
+          camDesc:
+            "Visualisez les articulations de la main en temps réel avec des repères émeraude et citron vert.",
+          startCamBtn: "📷 Démarrer la Caméra",
+          stopCamBtn: "⏹ Arrêter la Caméra",
+          camStarting: "Démarrage de la caméra...",
+          camActive:
+            "Suivi actif — lignes émeraude et points citron vert en direct.",
+          camStopped: "Caméra arrêtée.",
+          camError: "Impossible de démarrer la caméra.",
+          camTipsHeading: "Conseils pratiques :",
+          camTips: [
+            "Gardez la main bien visible dans le cadre à hauteur de poitrine.",
+            "Privilégiez un éclairage uniforme pour conserver les 21 points.",
+            "Les traits émeraude et points citron vert affichent chaque jointure en direct.",
+          ],
+          dictShortcut: "Raccourci : / pour chercher • Échap pour fermer",
+          flashShortcut: "Raccourci : Espace pour retourner",
+          signCount: (n) => `${n} ${n === 1 ? "signe" : "signes"}`,
+          oneHandBadge: "1 Main + Mots Entiers",
+          twoHandBadge: "2 Mains + Mots Entiers",
+          mixedHandBadge: "Formes Régionales + Mots",
+          slOptionText: (flag, code, modeShort, count) =>
+            `${flag} ${code} (${modeShort} — ${count} signes)`,
+          slModesShort: {
+            ASL: "1 main",
+            BSL: "2 mains",
+            AUSLAN: "2 mains",
+            NZSL: "2 mains",
+            ISL: "Signes Inde",
+            LSF: "1 main",
+            LSE: "Signes Espagne",
+            DGS: "Signes Allemagne",
+            JSL: "Kana Yubimoji",
+          },
+          slNames: {
+            ASL: "ASL",
+            BSL: "BSL",
+            AUSLAN: "Auslan",
+            NZSL: "NZSL",
+            ISL: "ISL",
+            LSF: "LSF",
+            LSE: "LSE",
+            DGS: "DGS",
+            JSL: "JSL",
+          },
+          searchPlaceholder:
+            "🔍 Chercher des mots ou phrases (ex. i like you, hello, thank you)...",
+          tryPhraseLabel: "Essayer :",
+          gridSectionLabel: "Mots Entiers & Alphabet",
+          fullSentenceHeading: "Phrase Complète",
+          wordBreakdownHeading: "Détail Mot par Mot (Main + Langage Corporel)",
+          wholeWordTag: "MOT",
+          spelledWordTag: "ÉPELÉ",
+          bodyCueLabel: "Geste & Expression",
+          lettersCount: (n) => `${n} ${n === 1 ? "lettre" : "lettres"}`,
+          emptySearch: (sl) =>
+            `Aucune carte correspondante dans <strong>${sl}</strong>.`,
+          dictDesc:
+            'Recherchez des mots entiers ou des phrases (comme "i like you") pour voir les signes complets avec langage corporel + détail !',
+          flashDesc:
+            "Observez la main et le geste corporel, appuyez sur Espace pour retourner.",
+          quizDesc: "Identifiez le signe affiché pour gagner +10 XP.",
+          quizPrompt: "Quel signe est affiché ci-dessus ?",
+          quizCorrect: "✅ Bien joué ! +10 XP",
+          quizWrong: "❌ Réessayez !",
+          nextCard: "Carte Suivante ➔",
+          flipHint: "Cliquez ou appuyez sur Espace pour révéler",
+          gotIt: "Compris !",
+          signWord: "Signe",
+          fingers: {
+            Thumb: "Pouce",
+            Index: "Index",
+            Middle: "Majeur",
+            Ring: "Annulaire",
+            Pinky: "Auriculaire",
+          },
+          fingerStates: {
+            Up: "Levé",
+            Curved: "Courbé",
+            Tucked: "Replié",
+            Down: "Baissé",
+            Closed: "Fermé",
+          },
+          cues: {
+            aslOneHand: "1 main ASL",
+            bslTwoHand: "2 mains BSL",
+            auslanTwoHand: "2 mains Auslan",
+            nzslTwoHand: "2 mains NZSL",
+            islOneHand: "1 main ISL",
+            islTwoHand: "2 mains ISL",
+            lsfOneHand: "1 main LSF",
+            lseOneHand: "1 main LSE",
+            dgsOneHand: "1 main DGS",
+            yubimoji: (romaji) => `Kana JSL • ${romaji.toUpperCase()}`,
+            wholeWord1H: "Mot Entier (1M)",
+            wholeWord2H: "Mot Entier (2M)",
+          },
+        },
+      };
+
+      let currentUILang = localStorage.getItem("jungle_ui_lang") || "en";
+      function getT() {
+        return UI_TRANSLATIONS[currentUILang] || UI_TRANSLATIONS.en;
+      }
+
+      /* 3. VECTOR HAND + BODY CUE OVERLAY GENERATOR */
+      const HAND_POSES = {
+        A: { fingers: [0.6, 0, 0, 0, 0], lShape: false },
+        B: { fingers: [0, 1, 1, 1, 1], thumbAcross: true },
+        C: { fingers: [0.5, 0.5, 0.5, 0.5, 0.5] },
+        D: { fingers: [0.4, 1, 0.3, 0.3, 0.3] },
+        E: { fingers: [0, 0.3, 0.3, 0.3, 0.3] },
+        F: { fingers: [0.4, 0.3, 1, 1, 1] },
+        G: { fingers: [0.8, 0.8, 0, 0, 0] },
+        H: { fingers: [0, 0.8, 0.8, 0, 0] },
+        I: { fingers: [0, 0, 0, 0, 1] },
+        J: { fingers: [0, 0, 0, 0, 1], motionArc: true },
+        K: { fingers: [0.6, 1, 0.85, 0, 0], spreadV: true },
+        L: { fingers: [1, 1, 0, 0, 0], lShape: true },
+        M: { fingers: [0, 0.2, 0.2, 0.2, 0] },
+        N: { fingers: [0, 0.2, 0.2, 0, 0] },
+        O: { fingers: [0.5, 0.5, 0.5, 0.5, 0.5] },
+        P: { fingers: [0.6, -1, -0.8, 0, 0] },
+        Q: { fingers: [-0.8, -1, 0, 0, 0] },
+        R: { fingers: [0, 1, 1, 0, 0], crossed: true },
+        S: { fingers: [0, 0, 0, 0, 0], thumbOver: true },
+        T: { fingers: [0.4, 0.2, 0, 0, 0] },
+        U: { fingers: [0, 1, 1, 0, 0] },
+        V: { fingers: [0, 1, 1, 0, 0], spreadV: true },
+        W: { fingers: [0, 1, 1, 1, 0], spreadV: true },
+        X: { fingers: [0, 0.5, 0, 0, 0] },
+        Y: { fingers: [1, 0, 0, 0, 1], lShape: true },
+        Z: { fingers: [0, 1, 0, 0, 0], motionZ: true },
+      };
+
+      function getFingerStateKey(val) {
+        if (val >= 0.8) return "Up";
+        if (val > 0.35) return "Curved";
+        if (val > 0) return "Tucked";
+        if (val < 0) return "Down";
+        return "Closed";
+      }
+
+      function getFingerChipsHTML(poseKey) {
+        const t = getT();
+        const pose = HAND_POSES[poseKey] || { fingers: [0.5, 1, 1, 0, 0] };
+        const fingerKeys = ["Thumb", "Index", "Middle", "Ring", "Pinky"];
+        return pose.fingers
+          .map((v, i) => {
+            const fName = t.fingers[fingerKeys[i]];
+            const fState = t.fingerStates[getFingerStateKey(v)];
+            return `<span class="finger-chip">${fName}: ${fState}</span>`;
+          })
+          .join("");
+      }
+
+      function buildSingleHandGroup(pose, transformAttr = "") {
+        const [t, f1, f2, f3, f4] = pose.fingers;
+        const fingerHeights = [f1, f2, f3, f4].map((val) => {
+          if (val === 1) return 38;
+          if (val === 0.85) return 33;
+          if (val === 0.8) return 30;
+          if (val === 0.5) return 22;
+          if (val === 0.3 || val === 0.2) return 15;
+          if (val < 0) return 32;
+          return 11;
+        });
+
+        const isDown = f1 < 0;
+        const spread = pose.spreadV ? 3.2 : pose.crossed ? -1.5 : 0;
+        const xPositions = [
+          33 - spread,
+          43 - spread * 0.3,
+          53 + spread * 0.3,
+          63 + spread,
+        ];
+
+        const fingersMarkup = fingerHeights
+          .map((h, i) => {
+            const x = xPositions[i];
+            const y = isDown ? 56 : 52 - h;
+            const rot = pose.spreadV
+              ? (i - 1.5) * 6
+              : pose.crossed && i < 2
+                ? i === 0
+                  ? 7
+                  : -7
+                : 0;
+            return `
+          <rect x="${x}" y="${y}" width="8.5" height="${h + 8}" rx="4.25"
+                fill="url(#jungleSkin)" stroke="#052e16" stroke-width="2"
+                transform="rotate(${rot} ${x + 4.25} 52)" />
+          <line x1="${x + 2}" y1="${y + Math.min(12, h * 0.45)}" x2="${x + 6.5}" y2="${y + Math.min(12, h * 0.45)}"
+                stroke="#064e3b" stroke-width="1.3" stroke-linecap="round" opacity="0.65" />
+        `;
+          })
+          .join("");
+
+        const thumbAngle = pose.lShape ? -48 : t > 0.5 ? -26 : 28;
+        const thumbX = pose.thumbOver || pose.thumbAcross ? 36 : 23;
+        const thumbY = pose.thumbOver || pose.thumbAcross ? 57 : 52;
+        const thumbW = pose.thumbOver || pose.thumbAcross ? 26 : 11;
+        const thumbH = pose.thumbOver || pose.thumbAcross ? 9 : 24;
+
+        return `
+        <g ${transformAttr ? `transform="${transformAttr}"` : ""}>
+          ${fingersMarkup}
+          <rect x="31" y="46" width="42" height="35" rx="14" fill="url(#jungleSkin)" stroke="#052e16" stroke-width="2.2" />
+          <rect x="40" y="77" width="24" height="14" rx="6" fill="#059669" stroke="#052e16" stroke-width="2" />
+          <rect x="${thumbX}" y="${thumbY}" width="${thumbW}" height="${thumbH}" rx="5"
+                fill="url(#jungleSkin)" stroke="#052e16" stroke-width="2"
+                transform="rotate(${thumbAngle} ${thumbX + 5} ${thumbY + 6})" />
+        </g>
+      `;
+      }
+
+      function renderMotionSVG(motionType) {
+        if (motionType === "to_chest") {
+          return `<path d="M50 14 L50 32 M43 25 L50 32 L57 25" fill="none" stroke="#bef264" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" />`;
+        }
+        if (motionType === "from_chest") {
+          return `<path d="M50 32 L50 14 M43 21 L50 14 L57 21" fill="none" stroke="#bef264" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" />`;
+        }
+        if (motionType === "forward") {
+          return `<path d="M22 20 L68 20 M60 14 L68 20 L60 26" fill="none" stroke="#bef264" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" />`;
+        }
+        if (motionType === "wave") {
+          return `<path d="M24 20 Q38 10 50 20 T76 20" fill="none" stroke="#bef264" stroke-width="2.8" stroke-linecap="round" />`;
+        }
+        if (motionType === "nod") {
+          return `<path d="M74 16 L74 34 M69 21 L74 16 L79 21 M69 29 L74 34 L79 29" fill="none" stroke="#bef264" stroke-width="2.5" stroke-linecap="round" />`;
+        }
+        if (motionType === "cross_chest") {
+          return `<path d="M28 28 L72 28 M72 28 L28 28" fill="none" stroke="#bef264" stroke-width="3" stroke-linecap="round" stroke-dasharray="5 3" />`;
+        }
+        return "";
+      }
+
+      function renderHandSVG(
+        poseKey,
+        twoHanded = false,
+        labelOverlay = "",
+        isWholeWord = false,
+        motionType = "",
+      ) {
+        const pose = HAND_POSES[poseKey] || { fingers: [0.5, 1, 1, 0, 0] };
+
+        const letterMotion = pose.motionZ
+          ? `<path d="M22 18 L52 18 L24 34 L54 34" fill="none" stroke="#bef264" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" />`
+          : pose.motionArc
+            ? `<path d="M68 24 Q74 44 54 46" fill="none" stroke="#bef264" stroke-width="2.8" stroke-linecap="round" stroke-dasharray="4 3" />`
+            : "";
+
+        const wordMotion = renderMotionSVG(motionType);
+        const kanaTag = labelOverlay
+          ? `<text x="50" y="94" text-anchor="middle" fill="#bef264" font-size="12" font-weight="900">${labelOverlay}</text>`
+          : "";
+
+        const handsContent = twoHanded
+          ? `
+          ${buildSingleHandGroup({ fingers: [0.2, 1, 1, 1, 1], thumbAcross: true }, "translate(-16, 14) scale(0.74)")}
+          ${buildSingleHandGroup(pose, "translate(24, 10) scale(0.80)")}
+        `
+          : buildSingleHandGroup(pose, "translate(8, 6) scale(0.90)");
+
+        return `
+        <div class="sign-art-box">
+          ${isWholeWord ? `<span class="type-badge">WORD</span>` : ""}
+          <span class="hand-badge">${twoHanded ? "2H" : "1H"}</span>
+          <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <defs>
+              <linearGradient id="jungleSkin" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#bef264" />
+                <stop offset="55%" stop-color="#4ade80" />
+                <stop offset="100%" stop-color="#10b981" />
+              </linearGradient>
+            </defs>
+            ${handsContent}
+            ${letterMotion}
+            ${wordMotion}
+            ${kanaTag}
+          </svg>
+        </div>
+      `;
+      }
+
+      /* 4. WHOLE-WORD LEXICON WITH BODY LANGUAGE & FACIAL CUES */
+      const WHOLE_WORD_SIGNS = [
+        {
+          key: "i",
+          aliases: ["i", "me", "my"],
+          label: "I / Me",
+          pose: "I",
+          twoHand: false,
+          motion: "to_chest",
+          bodyShort: "Point to chest • Neutral gaze",
+          bodyCue:
+            "Point index finger (or I-handshape) inward to the center of your chest while maintaining eye contact.",
+          desc: "Whole-word pronoun sign: tap or point to the center of your own chest.",
+        },
+        {
+          key: "you",
+          aliases: ["you", "your", "u"],
+          label: "You",
+          pose: "D",
+          twoHand: false,
+          motion: "forward",
+          bodyShort: "Point to listener • Eye contact",
+          bodyCue:
+            "Point index finger directly toward the person you are addressing with clear eye contact (raise eyebrows if asking a question).",
+          desc: "Whole-word pronoun sign: extend index finger forward toward the listener.",
+        },
+        {
+          key: "like",
+          aliases: ["like", "likes", "liked"],
+          label: "Like",
+          pose: "F",
+          twoHand: false,
+          motion: "from_chest",
+          bodyShort: "Pull from chest • Warm smile",
+          bodyCue:
+            "Start with open hand near chest, pull straight forward while pinching thumb and middle finger together, paired with a warm facial expression.",
+          desc: "Whole-word sign for 'Like': draw fingers forward from the chest into a pinch.",
+        },
+        {
+          key: "love",
+          aliases: ["love", "loves", "loved"],
+          label: "Love",
+          pose: "S",
+          twoHand: true,
+          motion: "cross_chest",
+          bodyShort: "Cross arms over chest • Warm expression",
+          bodyCue:
+            "Cross both closed fists over your heart/chest like a hug, leaning slightly forward with a warm expression.",
+          desc: "Two-handed whole-word sign for 'Love': cross both fists firmly over the chest.",
+        },
+        {
+          key: "hello",
+          aliases: ["hello", "hi", "hey"],
+          label: "Hello",
+          pose: "B",
+          twoHand: false,
+          motion: "wave",
+          bodyShort: "Temple salute / wave • Friendly smile",
+          bodyCue:
+            "Bring flat B-hand near forehead/temple and move outward in a friendly salute or small wave with a welcoming smile.",
+          desc: "Whole-word greeting sign: move flat hand outward from the forehead with a smile.",
+        },
+        {
+          key: "thank",
+          aliases: ["thank", "thanks", "thankyou"],
+          label: "Thank You",
+          pose: "B",
+          twoHand: false,
+          motion: "forward",
+          bodyShort: "Chin outward • Slight head nod",
+          bodyCue:
+            "Touch fingertips of flat B-hand to your chin/lips and extend forward toward the person with a polite head nod and smile.",
+          desc: "Whole-word sign for 'Thank You': move flat hand forward from the chin.",
+        },
+        {
+          key: "please",
+          aliases: ["please"],
+          label: "Please",
+          pose: "B",
+          twoHand: false,
+          motion: "to_chest",
+          bodyShort: "Circular rub on chest • Polite expression",
+          bodyCue:
+            "Place flat B-hand palm-in on the center of your chest and rub in a smooth circle with a polite, earnest facial expression.",
+          desc: "Whole-word sign for 'Please': rub flat palm in a circle on the chest.",
+        },
+        {
+          key: "yes",
+          aliases: ["yes", "yeah", "yep"],
+          label: "Yes",
+          pose: "S",
+          twoHand: false,
+          motion: "nod",
+          bodyShort: "Fist nods • Head nod",
+          bodyCue:
+            "Nod your S-fist up and down at the wrist like a nodding head, matching with an affirmative head nod.",
+          desc: "Whole-word sign for 'Yes': nod closed fist forward at the wrist.",
+        },
+        {
+          key: "no",
+          aliases: ["no", "nope", "not"],
+          label: "No",
+          pose: "H",
+          twoHand: false,
+          motion: "forward",
+          bodyShort: "Snap fingers to thumb • Head shake",
+          bodyCue:
+            "Tap index and middle fingertips sharply onto the thumb tip while shaking your head side-to-side.",
+          desc: "Whole-word sign for 'No': snap index and middle fingers onto the thumb.",
+        },
+        {
+          key: "help",
+          aliases: ["help", "helping", "helped"],
+          label: "Help",
+          pose: "A",
+          twoHand: true,
+          motion: "from_chest",
+          bodyShort: "Lift A-fist on palm • Engaged posture",
+          bodyCue:
+            "Place closed A-fist (thumb up) onto your flat supporting palm and lift both hands upward together.",
+          desc: "Two-handed whole-word sign for 'Help': lift closed fist resting on open palm.",
+        },
+        {
+          key: "friend",
+          aliases: ["friend", "friends"],
+          label: "Friend",
+          pose: "X",
+          twoHand: true,
+          motion: "cross_chest",
+          bodyShort: "Hook index fingers • Warm smile",
+          bodyCue:
+            "Hook your two curved X-index fingers together, then flip and hook them the opposite way with a friendly smile.",
+          desc: "Two-handed whole-word sign for 'Friend': interlock hooked index fingers twice.",
+        },
+        {
+          key: "good",
+          aliases: ["good", "great", "well"],
+          label: "Good",
+          pose: "B",
+          twoHand: true,
+          motion: "forward",
+          bodyShort: "Chin to open palm • Positive nod",
+          bodyCue:
+            "Move flat hand from your chin down onto your open supporting palm with an approving nod.",
+          desc: "Whole-word sign for 'Good': move flat hand from chin down into open palm.",
+        },
+        {
+          key: "sorry",
+          aliases: ["sorry", "apologize"],
+          label: "Sorry",
+          pose: "A",
+          twoHand: false,
+          motion: "to_chest",
+          bodyShort: "Circle fist on chest • Apologetic face",
+          bodyCue:
+            "Rub closed A-fist in a circle over your chest while showing a sincere, apologetic facial expression.",
+          desc: "Whole-word sign for 'Sorry': rub closed fist in a circle on the chest.",
+        },
+        {
+          key: "learn",
+          aliases: ["learn", "learning", "study"],
+          label: "Learn",
+          pose: "O",
+          twoHand: true,
+          motion: "to_chest",
+          bodyShort: "Lift from palm to forehead • Focused look",
+          bodyCue:
+            "Pinch fingertips from your open supporting palm up to your forehead as if placing knowledge into your mind.",
+          desc: "Two-handed whole-word sign for 'Learn': draw pinched hand from open palm up to forehead.",
+        },
+        {
+          key: "want",
+          aliases: ["want", "wants", "wanted"],
+          label: "Want",
+          pose: "C",
+          twoHand: true,
+          motion: "to_chest",
+          bodyShort: "Pull clawed hands inward • Engaged brow",
+          bodyCue:
+            "Hold both curved claw hands palms-up and pull them inward toward your torso.",
+          desc: "Two-handed whole-word sign for 'Want': draw curved hands inward toward the body.",
+        },
+        {
+          key: "need",
+          aliases: ["need", "needs", "needed"],
+          label: "Need",
+          pose: "X",
+          twoHand: false,
+          motion: "nod",
+          bodyShort: "Bend X-finger downward • Firm nod",
+          bodyCue:
+            "Bend hooked X-index finger downward decisively with a firm expression or brow furrow.",
+          desc: "Whole-word sign for 'Need': bend hooked index finger downward at the wrist.",
+        },
+      ];
+
+      /* 5. ALPHABET DATASETS (1H / 2H ACCURATE) */
+      const ASL_DESCRIPTIONS = {
+        A: "One-handed closed fist with thumb resting upright against the side of the index finger.",
+        B: "One-handed sign with four fingers straight up together and thumb tucked across the palm.",
+        C: "One-handed curved fingers and thumb forming a C arc.",
+        D: "One-handed index finger pointing straight up while middle, ring, and pinky touch the thumb.",
+        E: "One-handed sign with fingertips curled down onto the thumb across the palm.",
+        F: "One-handed sign with thumb and index pinched in an O while three fingers point up.",
+        G: "One-handed sign with index and thumb extended horizontally parallel to each other.",
+        H: "One-handed sign with index and middle fingers extended together horizontally.",
+        I: "One-handed closed fist with only the pinky finger extended straight up.",
+        J: "One-handed pinky extended upward, sweeping downward in a J arc.",
+        K: "One-handed index up, middle angled forward, and thumb tucked between them.",
+        L: "One-handed index up and thumb out at 90 degrees forming an L.",
+        M: "One-handed sign with thumb tucked under index, middle, and ring fingers.",
+        N: "One-handed sign with thumb tucked under index and middle fingers.",
+        O: "One-handed sign with curved fingers meeting the thumb in an O shape.",
+        P: "One-handed K handshape angled downward.",
+        Q: "One-handed G handshape pointed straight downward.",
+        R: "One-handed sign with index and middle fingers crossed.",
+        S: "One-handed fist with the thumb wrapped across the front of the fingers.",
+        T: "One-handed fist with thumb tucked under the index finger.",
+        U: "One-handed index and middle fingers extended straight up together.",
+        V: "One-handed index and middle fingers spread in a V.",
+        W: "One-handed index, middle, and ring fingers spread upward.",
+        X: "One-handed sign with index finger hooked like a claw.",
+        Y: "One-handed thumb and pinky extended outward while middle fingers stay curled.",
+        Z: "One-handed index finger tracing a Z shape in the air.",
+      };
+
+      const LETTERS_26 = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+      const LETTERS_LSE = [
+        "A",
+        "B",
+        "C",
+        "D",
+        "E",
+        "F",
+        "G",
+        "H",
+        "I",
+        "J",
+        "K",
+        "L",
+        "M",
+        "N",
+        "Ñ",
+        "O",
+        "P",
+        "Q",
+        "R",
+        "S",
+        "T",
+        "U",
+        "V",
+        "W",
+        "X",
+        "Y",
+        "Z",
+      ];
+      const LETTERS_DGS = [
+        "A",
+        "Ä",
+        "B",
+        "C",
+        "D",
+        "E",
+        "F",
+        "G",
+        "H",
+        "I",
+        "J",
+        "K",
+        "L",
+        "M",
+        "N",
+        "O",
+        "Ö",
+        "P",
+        "Q",
+        "R",
+        "S",
+        "ẞ",
+        "T",
+        "U",
+        "Ü",
+        "V",
+        "W",
+        "X",
+        "Y",
+        "Z",
+      ];
+
+      function mapPose(ch) {
+        const base = ch
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .toUpperCase();
+        if (base === "Ñ") return "N";
+        if (ch === "ẞ") return "S";
+        return HAND_POSES[base] ? base : "A";
+      }
+
+      function buildWordItemsForSL(slCode) {
+        return WHOLE_WORD_SIGNS.map((w) => ({
+          id: `${slCode}_WORD_${w.key}`,
+          isWholeWord: true,
+          aliases: w.aliases,
+          name: w.label,
+          pose: w.pose,
+          twoHand: w.twoHand,
+          motion: w.motion,
+          bodyShort: w.bodyShort,
+          bodyCue: w.bodyCue,
+          cueKey: w.twoHand ? "wholeWord2H" : "wholeWord1H",
+          desc: `${slCode} ${w.desc}`,
+        }));
+      }
+
+      const ASL_DATA = [
+        ...buildWordItemsForSL("ASL"),
+        ...LETTERS_26.map((l) => ({
+          id: `ASL_${l}`,
+          name: l,
+          pose: l,
+          twoHand: false,
+          cueKey: "aslOneHand",
+          desc: ASL_DESCRIPTIONS[l],
+        })),
+      ];
+
+      const BSL_DATA = [
+        ...buildWordItemsForSL("BSL"),
+        ...LETTERS_26.map((l) => ({
+          id: `BSL_${l}`,
+          name: l,
+          pose: l,
+          twoHand: true,
+          cueKey: "bslTwoHand",
+          desc: `BSL two-handed manual sign for "${l}".`,
+        })),
+      ];
+
+      const AUSLAN_DATA = [
+        ...buildWordItemsForSL("Auslan"),
+        ...LETTERS_26.map((l) => ({
+          id: `AUS_${l}`,
+          name: l,
+          pose: l,
+          twoHand: true,
+          cueKey: "auslanTwoHand",
+          desc: `Auslan two-handed manual sign for "${l}".`,
+        })),
+      ];
+
+      const NZSL_DATA = [
+        ...buildWordItemsForSL("NZSL"),
+        ...LETTERS_26.map((l) => ({
+          id: `NZSL_${l}`,
+          name: l,
+          pose: l,
+          twoHand: true,
+          cueKey: "nzslTwoHand",
+          desc: `NZSL two-handed manual sign for "${l}".`,
+        })),
+      ];
+
+      const ISL_TWO_HAND_SET = new Set([
+        "A",
+        "B",
+        "D",
+        "E",
+        "F",
+        "G",
+        "H",
+        "J",
+        "K",
+        "M",
+        "N",
+        "P",
+        "Q",
+        "R",
+        "S",
+        "T",
+        "W",
+        "X",
+        "Y",
+        "Z",
+      ]);
+      const ISL_DATA = [
+        ...buildWordItemsForSL("ISL"),
+        ...LETTERS_26.map((l) => {
+          const twoH = ISL_TWO_HAND_SET.has(l);
+          return {
+            id: `ISL_${l}`,
+            name: l,
+            pose: l,
+            twoHand: twoH,
+            cueKey: twoH ? "islTwoHand" : "islOneHand",
+            desc: `ISL ${twoH ? "two-handed" : "one-handed"} sign for "${l}".`,
+          };
+        }),
+      ];
+
+      const LSF_DATA = [
+        ...buildWordItemsForSL("LSF"),
+        ...LETTERS_26.map((l) => ({
+          id: `LSF_${l}`,
+          name: l,
+          pose: l,
+          twoHand: false,
+          cueKey: "lsfOneHand",
+          desc: `LSF one-handed manual sign for "${l}".`,
+        })),
+      ];
+
+      const LSE_DATA = [
+        ...buildWordItemsForSL("LSE"),
+        ...LETTERS_LSE.map((l) => ({
+          id: `LSE_${l}`,
+          name: l,
+          pose: mapPose(l),
+          twoHand: false,
+          cueKey: "lseOneHand",
+          desc: `LSE one-handed sign for "${l}".`,
+        })),
+      ];
+
+      const DGS_DATA = [
+        ...buildWordItemsForSL("DGS"),
+        ...LETTERS_DGS.map((l) => ({
+          id: `DGS_${l}`,
+          name: l,
+          pose: mapPose(l),
+          twoHand: false,
+          cueKey: "dgsOneHand",
+          desc: `DGS one-handed sign for "${l}".`,
+        })),
+      ];
+
+      const JSL_SYLLABLES = [
+        ["あ", "a", "A"],
+        ["い", "i", "I"],
+        ["う", "u", "U"],
+        ["え", "e", "E"],
+        ["お", "o", "O"],
+        ["か", "ka", "K"],
+        ["き", "ki", "K"],
+        ["く", "ku", "C"],
+        ["け", "ke", "V"],
+        ["こ", "ko", "C"],
+        ["さ", "sa", "S"],
+        ["し", "shi", "C"],
+        ["す", "su", "V"],
+        ["せ", "se", "B"],
+        ["そ", "so", "Y"],
+        ["た", "ta", "T"],
+        ["ち", "chi", "O"],
+        ["つ", "tsu", "U"],
+        ["て", "te", "B"],
+        ["と", "to", "U"],
+        ["な", "na", "N"],
+        ["に", "ni", "H"],
+        ["ぬ", "nu", "U"],
+        ["ね", "ne", "V"],
+        ["の", "no", "Z"],
+        ["は", "ha", "H"],
+        ["ひ", "hi", "L"],
+        ["ふ", "fu", "F"],
+        ["へ", "he", "V"],
+        ["ほ", "ho", "B"],
+        ["ま", "ma", "M"],
+        ["み", "mi", "W"],
+        ["む", "mu", "G"],
+        ["め", "me", "O"],
+        ["も", "mo", "O"],
+        ["や", "ya", "Y"],
+        ["ゆ", "yu", "Y"],
+        ["よ", "yo", "Y"],
+        ["ら", "ra", "R"],
+        ["り", "ri", "U"],
+        ["る", "ru", "W"],
+        ["れ", "re", "V"],
+        ["ろ", "ro", "U"],
+        ["わ", "wa", "W"],
+        ["を", "wo", "O"],
+        ["ん", "n", "Z"],
+      ];
+
+      const JSL_DATA = [
+        ...buildWordItemsForSL("JSL"),
+        ...JSL_SYLLABLES.map(([kana, romaji, pose]) => ({
+          id: `JSL_${romaji}`,
+          name: `${kana} (${romaji})`,
+          kanaBadge: kana,
+          romaji,
+          pose,
+          twoHand: false,
+          cueKey: "yubimoji",
+          desc: `JSL Yubimoji sign for "${kana}" (${romaji}).`,
+        })),
+      ];
+
+      const DATASETS = {
+        ASL: { flag: "🇺🇸", code: "ASL", modeType: "1h", items: ASL_DATA },
+        BSL: { flag: "🇬🇧", code: "BSL", modeType: "2h", items: BSL_DATA },
+        AUSLAN: {
+          flag: "🇦🇺",
+          code: "Auslan",
+          modeType: "2h",
+          items: AUSLAN_DATA,
+        },
+        NZSL: { flag: "🇳🇿", code: "NZSL", modeType: "2h", items: NZSL_DATA },
+        ISL: { flag: "🇮🇳", code: "ISL", modeType: "mixed", items: ISL_DATA },
+        LSF: { flag: "🇫🇷", code: "LSF", modeType: "1h", items: LSF_DATA },
+        LSE: { flag: "🇪🇸", code: "LSE", modeType: "1h", items: LSE_DATA },
+        DGS: { flag: "🇩🇪", code: "DGS", modeType: "1h", items: DGS_DATA },
+        JSL: { flag: "🇯🇵", code: "JSL", modeType: "1h", items: JSL_DATA },
+      };
+
+      function getLocalizedCue(item) {
+        const t = getT();
+        if (item.cueKey === "yubimoji") {
+          return t.cues.yubimoji(item.romaji || "");
+        }
+        return t.cues[item.cueKey] || "";
+      }
+
+      function updateSignLanguageOptions() {
+        const t = getT();
+        const sel = document.getElementById("slTypeSelect");
+        if (!sel) return;
+        Array.from(sel.options).forEach((opt) => {
+          const ds = DATASETS[opt.value];
+          if (!ds) return;
+          const modeShort = t.slModesShort[opt.value] || ds.code;
+          opt.text = t.slOptionText(
+            ds.flag,
+            ds.code,
+            modeShort,
+            ds.items.length,
+          );
+        });
+      }
+
+      function updateHandModeBadge() {
+        const t = getT();
+        const ds = DATASETS[currentSL] || DATASETS.ASL;
+        const badge = document.getElementById("handModePill");
+        if (!badge) return;
+        if (ds.modeType === "2h") badge.innerText = t.twoHandBadge;
+        else if (ds.modeType === "mixed") badge.innerText = t.mixedHandBadge;
+        else badge.innerText = t.oneHandBadge;
+      }
+
+      function applyUILanguage() {
+        const t = getT();
+        const ds = DATASETS[currentSL] || DATASETS.ASL;
+        const slLabel = t.slNames[currentSL] || ds.code;
+
+        document.title = t.pageTitle;
+        document.documentElement.lang = currentUILang;
+        document.documentElement.dir = currentUILang === "ar" ? "rtl" : "ltr";
+
+        const backBtnLabel = document.getElementById("backBtnLabel");
+        if (backBtnLabel) backBtnLabel.innerText = t.backBtn;
+
+        document.getElementById("streakLabel").innerText = t.streakLabel;
+        document.getElementById("daySuffix").innerText = t.daySuffix;
+        document.getElementById("xpLabel").innerText = t.xpLabel;
+
+        document.getElementById("tabBtnDict").innerText = t.tabDict;
+        document.getElementById("tabBtnFlash").innerText = t.tabFlash;
+        document.getElementById("tabBtnQuiz").innerText = t.tabQuiz;
+        document.getElementById("tabBtnCam").innerText = t.tabCam;
+
+        document.getElementById("headerBrandTitle").innerText =
+          `JUNGLESIGN — ${slLabel} ${t.hubSuffix}`;
+        document.getElementById("dictCardTitle").innerText =
+          `${slLabel} ${t.dictTitle}`;
+        document.getElementById("flashcardTitle").innerText =
+          `${slLabel} ${t.flashTitle}`;
+        document.getElementById("quizTitle").innerText =
+          `${slLabel} ${t.quizTitle}`;
+
+        updateHandModeBadge();
+        document.getElementById("dictShortcutHint").innerText = t.dictShortcut;
+        document.getElementById("flashShortcutHint").innerText =
+          t.flashShortcut;
+        document.getElementById("gridSectionLabel").innerText =
+          t.gridSectionLabel;
+        document.getElementById("tryPhraseLabel").innerText = t.tryPhraseLabel;
+
+        const searchInput = document.getElementById("searchInput");
+        if (searchInput) searchInput.placeholder = t.searchPlaceholder;
+
+        updateSignLanguageOptions();
+
+        const descs = document.querySelectorAll(".card-desc");
+        if (descs[0]) descs[0].innerText = t.dictDesc;
+        if (descs[1]) descs[1].innerText = t.flashDesc;
+        if (descs[2]) descs[2].innerText = t.quizDesc;
+
+        document.getElementById("quizPromptHeading").innerText = t.quizPrompt;
+        document.getElementById("nextCardBtn").innerText = t.nextCard;
+        document.querySelector(".flashcard-hint").innerText = t.flipHint;
+        document.getElementById("modalGotItBtn").innerText = t.gotIt;
+
+        document.getElementById("camCardTitle").innerText = t.camTitle;
+        document.getElementById("camCardDesc").innerText = t.camDesc;
+        document.getElementById("startCamBtn").innerText = t.startCamBtn;
+        document.getElementById("stopCamBtn").innerText = t.stopCamBtn;
+        document.getElementById("camTipsHeading").innerText = t.camTipsHeading;
+
+        const tipsList = document.getElementById("camTipsList");
+        if (tipsList && Array.isArray(t.camTips)) {
+          tipsList.innerHTML = t.camTips
+            .map((tip) => `<li>${tip}</li>`)
+            .join("");
+        }
+      }
+
+      function changeUILanguage(lang) {
+        currentUILang = lang || "en";
+        localStorage.setItem("jungle_ui_lang", currentUILang);
+        applyUILanguage();
+        filterDictionary();
+        nextFlashcard();
+        if (document.getElementById("quiz").classList.contains("active"))
+          setupQuiz();
+        const modal = document.getElementById("detailModal");
+        if (modal.classList.contains("active") && currentModalItem) {
+          openModal(currentModalItem);
+        }
+      }
+
+      /* 6. STATE & NAVIGATION */
+      let currentSL = "ASL";
+      let DICTIONARY_DATA = DATASETS.ASL.items;
+      let currentModalItem = null;
+      let currentXp = parseInt(localStorage.getItem("jungle_xp") || "100", 10);
+      let currentStreak = parseInt(
+        localStorage.getItem("jungle_streak") || "1",
+        10,
+      );
+
+      function updateStats() {
+        document.getElementById("xpCount").innerText = currentXp;
+        document.getElementById("streakCount").innerText = currentStreak;
+        localStorage.setItem("jungle_xp", String(currentXp));
+        localStorage.setItem("jungle_streak", String(currentStreak));
+      }
+
+      function switchTab(tabId, evt) {
+        document
+          .querySelectorAll(".tab-panel")
+          .forEach((p) => p.classList.remove("active"));
+        document
+          .querySelectorAll(".tab-btn")
+          .forEach((b) => b.classList.remove("active"));
+        document.getElementById(tabId).classList.add("active");
+        if (evt && evt.currentTarget) evt.currentTarget.classList.add("active");
+        if (tabId === "quiz") setupQuiz();
+        if (tabId !== "camera") stopCamera();
+      }
+
+      function changeSignLanguage() {
+        currentSL = document.getElementById("slTypeSelect").value;
+        const ds = DATASETS[currentSL] || DATASETS.ASL;
+        DICTIONARY_DATA = ds.items;
+
+        applyUILanguage();
+        filterDictionary();
+        nextFlashcard();
+        if (document.getElementById("quiz").classList.contains("active"))
+          setupQuiz();
+      }
+
+      function setQuickSearch(phrase) {
+        const input = document.getElementById("searchInput");
+        if (!input) return;
+        input.value = phrase;
+        filterDictionary();
+      }
+
+      /* 7. WHOLE-WORD + FINGERSPELLING SENTENCE & BREAKDOWN ENGINE */
+      function resolveWholeWordSign(word) {
+        const clean = word
+          .toLowerCase()
+          .replace(/[^a-z0-9äöüßñ\u3040-\u309f]/gi, "");
+        if (!clean) return null;
+        return (
+          DICTIONARY_DATA.find(
+            (item) =>
+              item.isWholeWord &&
+              Array.isArray(item.aliases) &&
+              item.aliases.includes(clean),
+          ) || null
+        );
+      }
+
+      function resolveCharToSignItem(ch) {
+        const raw = ch.trim();
+        if (!raw) return null;
+        const ds = DATASETS[currentSL] || DATASETS.ASL;
+        const upper = raw.toUpperCase();
+        const stripped = upper.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+        const match = DICTIONARY_DATA.find(
+          (item) =>
+            !item.isWholeWord &&
+            (item.name.toUpperCase() === upper ||
+              item.name
+                .toUpperCase()
+                .normalize("NFD")
+                .replace(/[\u0300-\u036f]/g, "") === stripped ||
+              (item.kanaBadge && item.kanaBadge === raw)),
+        );
+        if (match) return match;
+
+        if (HAND_POSES[stripped]) {
+          const isTwo = ds.modeType === "2h";
+          return {
+            id: `${currentSL}_SPELL_${encodeURIComponent(raw)}`,
+            name: upper,
+            pose: stripped,
+            twoHand: isTwo,
+            cueKey: isTwo ? "bslTwoHand" : "aslOneHand",
+            desc: `${ds.code} fingerspelled letter "${upper}".`,
+          };
+        }
+        return null;
+      }
+
+      function renderPhraseEngine(rawQuery) {
+        const panel = document.getElementById("phraseEnginePanel");
+        const trimmed = (rawQuery || "").trim();
+        const words = trimmed.split(/\s+/).filter(Boolean);
+
+        if (!words.length) {
+          panel.style.display = "none";
+          panel.innerHTML = "";
+          return;
+        }
+
+        const t = getT();
+        const resolvedWords = words
+          .map((rawWord) => {
+            const cleanDisplay = rawWord.replace(/[.,!?]/g, "");
+            const wholeSign = resolveWholeWordSign(cleanDisplay);
+            if (wholeSign) {
+              return {
+                rawWord: cleanDisplay,
+                type: "whole",
+                wholeSign,
+              };
+            }
+            const letters = Array.from(cleanDisplay)
+              .map((ch) => ({ ch, item: resolveCharToSignItem(ch) }))
+              .filter((x) => x.item !== null);
+
+            return {
+              rawWord: cleanDisplay,
+              type: "spelled",
+              letters,
+            };
+          })
+          .filter(
+            (entry) => entry.type === "whole" || entry.letters.length > 0,
+          );
+
+        if (!resolvedWords.length) {
+          panel.style.display = "none";
+          panel.innerHTML = "";
+          return;
+        }
+
+        // 1. Top Full Sentence Strip (Whole words shown as single signs; unknown words grouped cleanly)
+        const fullSentenceHTML = resolvedWords
+          .map((entry) => {
+            if (entry.type === "whole") {
+              const s = entry.wholeSign;
+              return `
+            <div class="sentence-word-card" onclick="openModalById('${s.id}')">
+              ${renderHandSVG(s.pose, s.twoHand, "", true, s.motion)}
+              <span class="sentence-word-name">${s.name}</span>
+              <span class="sentence-body-tag">🧍 ${s.bodyShort}</span>
+            </div>
+          `;
+            }
+            const firstSign = entry.letters[0].item;
+            return `
+          <div class="sentence-word-card is-spelled" onclick="openModalById('${firstSign.id}')">
+            ${renderHandSVG(firstSign.pose, firstSign.twoHand, entry.rawWord.toUpperCase(), false, "")}
+            <span class="sentence-word-name">${entry.rawWord.toUpperCase()}</span>
+            <span class="sentence-body-tag">✍️ ${t.lettersCount(entry.letters.length)}</span>
+          </div>
+        `;
+          })
+          .join("");
+
+        // 2. Detailed Word-by-Word Breakdown (Handshape + Body Language / Letter sequence)
+        const breakdownCardsHTML = resolvedWords
+          .map((entry) => {
+            if (entry.type === "whole") {
+              const s = entry.wholeSign;
+              return `
+            <div class="word-unit-box">
+              <div class="word-unit-header">
+                <span class="word-unit-label">${s.name}</span>
+                <span class="count-badge">${t.wholeWordTag} • ${s.twoHand ? "2H" : "1H"}</span>
+              </div>
+              <div class="word-unit-signs">
+                <div class="unit-sign-tile" onclick="openModalById('${s.id}')">
+                  ${renderHandSVG(s.pose, s.twoHand, "", true, s.motion)}
+                  <span class="unit-sign-char">${getLocalizedCue(s)}</span>
+                </div>
+              </div>
+              <div class="body-cue-banner">
+                <strong>🧍 ${t.bodyCueLabel}:</strong> ${s.bodyCue}
+              </div>
+            </div>
+          `;
+            }
+
+            const tilesHTML = entry.letters
+              .map(
+                ({ ch, item }) => `
+          <div class="unit-sign-tile" onclick="openModalById('${item.id}')">
+            ${renderHandSVG(item.pose, item.twoHand, item.kanaBadge || "")}
+            <span class="unit-sign-char">${ch.toUpperCase()}</span>
+          </div>
+        `,
+              )
+              .join("");
+
+            return `
+          <div class="word-unit-box">
+            <div class="word-unit-header">
+              <span class="word-unit-label">${entry.rawWord.toUpperCase()}</span>
+              <span class="count-badge">${t.spelledWordTag} • ${t.lettersCount(entry.letters.length)}</span>
+            </div>
+            <div class="word-unit-signs">${tilesHTML}</div>
+          </div>
+        `;
+          })
+          .join("");
+
+        panel.style.display = "block";
+        panel.innerHTML = `
+        <div class="phrase-top-bar">
+          <div class="phrase-heading">
+            <span>✋ ${t.fullSentenceHeading}</span>
+            <span class="phrase-sentence-pill">“${trimmed}”</span>
+          </div>
+        </div>
+        <div class="sentence-full-strip">${fullSentenceHTML}</div>
+        <div class="section-divider-label">${t.wordBreakdownHeading}</div>
+        <div class="words-unit-row">${breakdownCardsHTML}</div>
+      `;
+      }
+
+      function openModalById(id) {
+        const found = DICTIONARY_DATA.find((d) => d.id === id);
+        if (found) {
+          openModal(found);
+          return;
+        }
+        const parts = id.split("_SPELL_");
+        if (parts.length === 2) {
+          const ch = decodeURIComponent(parts[1]);
+          const pose = mapPose(ch);
+          const ds = DATASETS[currentSL] || DATASETS.ASL;
+          const isTwo = ds.modeType === "2h";
+          openModal({
+            id,
+            name: ch.toUpperCase(),
+            pose,
+            twoHand: isTwo,
+            cueKey: isTwo ? "bslTwoHand" : "aslOneHand",
+            desc: `${ds.code} fingerspelled letter "${ch.toUpperCase()}".`,
+          });
+        }
+      }
+
+      function buildDictionary(items) {
+        const t = getT();
+        const grid = document.getElementById("alphabetGrid");
+        document.getElementById("charCountBadge").innerText = t.signCount(
+          items.length,
+        );
+        grid.innerHTML = "";
+
+        if (!items.length) {
+          grid.innerHTML = `<div class="empty-state">${t.emptySearch(currentSL)}</div>`;
+          return;
+        }
+
+        items.forEach((item) => {
+          const card = document.createElement("div");
+          card.className = "sign-card";
+          card.innerHTML = `
+          ${renderHandSVG(item.pose, item.twoHand, item.kanaBadge || "", Boolean(item.isWholeWord), item.motion || "")}
+          <div>
+            <div class="sign-label">${item.name}</div>
+            <div class="sign-sub">${item.isWholeWord ? item.bodyShort : getLocalizedCue(item)}</div>
+          </div>
+        `;
+          card.onclick = () => openModal(item);
+          grid.appendChild(card);
+        });
+      }
+
+      function filterDictionary() {
+        const rawInput = document.getElementById("searchInput").value || "";
+        renderPhraseEngine(rawInput);
+
+        const q = rawInput
+          .toLowerCase()
+          .replace(/[().,!?]/g, " ")
+          .trim();
+        if (!q) {
+          buildDictionary(DICTIONARY_DATA);
+          return;
+        }
+
+        const terms = q.split(/\s+/);
+        const filtered = DICTIONARY_DATA.filter((item) => {
+          const aliasBlob = Array.isArray(item.aliases)
+            ? item.aliases.join(" ")
+            : "";
+          const blob =
+            `${item.name} ${aliasBlob} ${item.bodyShort || ""} ${item.bodyCue || ""} ${getLocalizedCue(item)} ${item.desc}`.toLowerCase();
+          return terms.some((term) => blob.includes(term));
+        });
+        buildDictionary(filtered);
+      }
+
+      function openModal(item) {
+        currentModalItem = item;
+        const t = getT();
+        document.getElementById("modalSymbol").innerHTML = renderHandSVG(
+          item.pose,
+          item.twoHand,
+          item.kanaBadge || "",
+          Boolean(item.isWholeWord),
+          item.motion || "",
+        );
+        document.getElementById("modalTitle").innerText =
+          `${currentSL} ${t.signWord}: ${item.name}`;
+        document.getElementById("modalMeta").innerText =
+          getLocalizedCue(item).toUpperCase();
+        document.getElementById("modalDesc").innerText = item.desc;
+
+        const bodyCueEl = document.getElementById("modalBodyCue");
+        if (item.bodyCue) {
+          bodyCueEl.style.display = "block";
+          bodyCueEl.innerHTML = `🧍 <strong>${t.bodyCueLabel}:</strong> ${item.bodyCue}`;
+        } else {
+          bodyCueEl.style.display = "none";
+        }
+
+        document.getElementById("modalFingerChips").innerHTML =
+          getFingerChipsHTML(item.pose);
+        document.getElementById("detailModal").classList.add("active");
+      }
+
+      function closeModal() {
+        currentModalItem = null;
+        document.getElementById("detailModal").classList.remove("active");
+      }
+
+      /* 8. FLASHCARDS */
+      let isFlipped = false;
+
+      function nextFlashcard() {
+        const t = getT();
+        isFlipped = false;
+        document.getElementById("cardFront").style.display = "block";
+        document.getElementById("cardAnswer").style.display = "none";
+
+        const item =
+          DICTIONARY_DATA[Math.floor(Math.random() * DICTIONARY_DATA.length)];
+        document.getElementById("cardSymbol").innerHTML = renderHandSVG(
+          item.pose,
+          item.twoHand,
+          item.kanaBadge || "",
+          Boolean(item.isWholeWord),
+          item.motion || "",
+        );
+        document.getElementById("cardAnswerTitle").innerText =
+          `${t.signWord} "${item.name}"`;
+        document.getElementById("cardAnswerDesc").innerText = item.bodyCue
+          ? `${item.desc} (${item.bodyShort})`
+          : item.desc;
+      }
+
+      function flipFlashcard() {
+        isFlipped = !isFlipped;
+        document.getElementById("cardFront").style.display = isFlipped
+          ? "none"
+          : "block";
+        document.getElementById("cardAnswer").style.display = isFlipped
+          ? "flex"
+          : "none";
+      }
+
+      /* 9. QUIZ */
+      let quizTarget = null;
+
+      function setupQuiz() {
+        quizTarget =
+          DICTIONARY_DATA[Math.floor(Math.random() * DICTIONARY_DATA.length)];
+        document.getElementById("quizTargetSymbol").innerHTML = renderHandSVG(
+          quizTarget.pose,
+          quizTarget.twoHand,
+          quizTarget.kanaBadge || "",
+          Boolean(quizTarget.isWholeWord),
+          quizTarget.motion || "",
+        );
+        document.getElementById("quizFeedback").innerText = "";
+
+        const options = [quizTarget.name];
+        while (options.length < Math.min(4, DICTIONARY_DATA.length)) {
+          const candidate =
+            DICTIONARY_DATA[Math.floor(Math.random() * DICTIONARY_DATA.length)]
+              .name;
+          if (!options.includes(candidate)) options.push(candidate);
+        }
+        options.sort(() => Math.random() - 0.5);
+
+        const grid = document.getElementById("quizOptionsGrid");
+        grid.innerHTML = "";
+        options.forEach((opt) => {
+          const btn = document.createElement("button");
+          btn.className = "quiz-btn";
+          btn.innerText = opt;
+          btn.onclick = () => checkQuizAnswer(opt);
+          grid.appendChild(btn);
+        });
+      }
+
+      function checkQuizAnswer(choice) {
+        const t = getT();
+        const fb = document.getElementById("quizFeedback");
+        if (choice === quizTarget.name) {
+          fb.innerText = t.quizCorrect;
+          fb.style.color = "var(--lime-neon)";
+          currentXp += 10;
+          updateStats();
+          setTimeout(setupQuiz, 1050);
+        } else {
+          fb.innerText = t.quizWrong;
+          fb.style.color = "var(--danger)";
+        }
+      }
+
+      /* 10. SMOOTH MEDIAPIPE CAMERA WITH LANDMARK DRAWING */
+      let mpHands = null;
+      let mpCamera = null;
+      let camStream = null;
+      let isCameraRunning = false;
+      let isProcessingFrame = false;
+
+      async function startCamera() {
+        const t = getT();
+        const statusEl = document.getElementById("camStatusText");
+        const startBtn = document.getElementById("startCamBtn");
+        const stopBtn = document.getElementById("stopCamBtn");
+        const videoElement = document.getElementById("webcam");
+        const canvasElement = document.getElementById("outputCanvas");
+        const canvasCtx = canvasElement.getContext("2d");
+
+        if (isCameraRunning) return;
+
+        try {
+          statusEl.innerText = t.camStarting;
+          document.getElementById("camContainer").style.display = "block";
+
+          if (!mpHands) {
+            mpHands = new Hands({
+              locateFile: (file) =>
+                `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`,
+            });
+
+            mpHands.setOptions({
+              maxNumHands: 2,
+              modelComplexity: 1,
+              minDetectionConfidence: 0.5,
+              minTrackingConfidence: 0.5,
+            });
+
+            mpHands.onResults((results) => {
+              canvasCtx.save();
+              canvasCtx.clearRect(
+                0,
+                0,
+                canvasElement.width,
+                canvasElement.height,
+              );
+              canvasCtx.translate(canvasElement.width, 0);
+              canvasCtx.scale(-1, 1);
+
+              if (results.image) {
+                canvasCtx.drawImage(
+                  results.image,
+                  0,
+                  0,
+                  canvasElement.width,
+                  canvasElement.height,
+                );
+              }
+
+              if (
+                results.multiHandLandmarks &&
+                typeof drawConnectors === "function" &&
+                typeof drawLandmarks === "function"
+              ) {
+                for (const landmarks of results.multiHandLandmarks) {
+                  drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS, {
+                    color: "#34d399",
+                    lineWidth: 3,
+                  });
+                  drawLandmarks(canvasCtx, landmarks, {
+                    color: "#a3e635",
+                    lineWidth: 2,
+                    radius: 4,
+                  });
+                }
+              }
+              canvasCtx.restore();
+            });
+          }
+
+          if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            throw new Error("getUserMedia unavailable");
+          }
+
+          camStream = await navigator.mediaDevices.getUserMedia({
+            video: { width: 480, height: 360, facingMode: "user" },
+            audio: false,
+          });
+          videoElement.srcObject = camStream;
+          await videoElement.play();
+
+          isCameraRunning = true;
+          isProcessingFrame = false;
+          startBtn.style.display = "none";
+          stopBtn.style.display = "inline-flex";
+          statusEl.innerText = t.camActive;
+
+          mpCamera = new Camera(videoElement, {
+            onFrame: async () => {
+              if (
+                !isCameraRunning ||
+                isProcessingFrame ||
+                !mpHands ||
+                videoElement.readyState < 2
+              )
+                return;
+              isProcessingFrame = true;
+              try {
+                await mpHands.send({ image: videoElement });
+              } catch (_) {
+              } finally {
+                isProcessingFrame = false;
+              }
+            },
+            width: 480,
+            height: 360,
+          });
+          await mpCamera.start();
+        } catch (err) {
+          isCameraRunning = false;
+          isProcessingFrame = false;
+          startBtn.style.display = "inline-flex";
+          stopBtn.style.display = "none";
+          statusEl.innerText = t.camError;
+        }
+      }
+
+      function stopCamera() {
+        const t = getT();
+        isCameraRunning = false;
+        isProcessingFrame = false;
+
+        if (mpCamera) {
+          try {
+            mpCamera.stop();
+          } catch (_) {}
+          mpCamera = null;
+        }
+        if (camStream) {
+          camStream.getTracks().forEach((track) => track.stop());
+          camStream = null;
+        }
+        const videoElement = document.getElementById("webcam");
+        if (videoElement) videoElement.srcObject = null;
+
+        const canvasElement = document.getElementById("outputCanvas");
+        if (canvasElement) {
+          const ctx = canvasElement.getContext("2d");
+          ctx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+        }
+
+        const startBtn = document.getElementById("startCamBtn");
+        const stopBtn = document.getElementById("stopCamBtn");
+        const statusEl = document.getElementById("camStatusText");
+        if (startBtn) startBtn.style.display = "inline-flex";
+        if (stopBtn) stopBtn.style.display = "none";
+        if (statusEl && statusEl.innerText) statusEl.innerText = t.camStopped;
+      }
+
+      /* KEYBOARD SHORTCUTS */
+      document.addEventListener("keydown", (e) => {
+        const tag = document.activeElement?.tagName;
+        if (e.key === "/" && tag !== "INPUT" && tag !== "TEXTAREA") {
+          e.preventDefault();
+          switchTab("dictionary");
+          document.getElementById("searchInput")?.focus();
+        } else if (e.key === "Escape") {
+          closeModal();
+        } else if (
+          e.code === "Space" &&
+          document.getElementById("flashcards").classList.contains("active") &&
+          tag !== "BUTTON"
+        ) {
+          e.preventDefault();
+          flipFlashcard();
+        }
+      });
+
+      /* INIT */
+      document.addEventListener("DOMContentLoaded", () => {
+        const uiSel = document.getElementById("uiLangSelect");
+        if (uiSel) uiSel.value = currentUILang;
+        checkAppMode();
+        updateStats();
+        applyUILanguage();
+        buildDictionary(DICTIONARY_DATA);
+        nextFlashcard();
+      });
+    </script>
+  </body>
+</html>

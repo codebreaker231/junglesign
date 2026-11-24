@@ -1,0 +1,12 @@
+{
+  "name": "sign-area",
+  "version": "2.2.0",
+  "description": "JungleSign — Jungle-themed Multi-Language Sign Language Learning Hub",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}
